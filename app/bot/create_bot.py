@@ -44,11 +44,12 @@ def set_russian_locale():
 async def init_bot():
     set_russian_locale()
     setup_dialogs(dp)
-    await set_commands()
 
-    dp.message.middleware(DatabaseMiddlewareWithoutCommit())
-    dp.message.middleware(DatabaseMiddlewareWithCommit())
+    dp.update.middleware(DatabaseMiddlewareWithoutCommit())
+    dp.update.middleware(DatabaseMiddlewareWithCommit())
     dp.message.middleware(AdminMiddleware())
+
+    await set_commands()
 
     dp.include_router(user_router)
     dp.include_router(admin_router)

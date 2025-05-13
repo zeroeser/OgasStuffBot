@@ -1,4 +1,4 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy import String, ForeignKey, types, BigInteger
 from sqlalchemy import Enum as SQLAlchemyEnum
@@ -13,11 +13,11 @@ class CompanyAdmin(Base):
     __tablename__ = "companies_administrators"
 
     # Связи
-    user_id: Mapped[UUID] = mapped_column(
-        types.UUID, ForeignKey("users.id"), primary_key=True
+    user_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
     )
     company_id: Mapped[UUID] = mapped_column(
-        types.UUID, ForeignKey("companies.id"), primary_key=True
+        types.UUID, ForeignKey("companies.id", ondelete="CASCADE"), primary_key=True
     )
 
     # Relationships
@@ -28,73 +28,82 @@ class CompanyAdmin(Base):
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[UUID] = mapped_column(types.UUID, primary_key=True)
-    tg_user_id: Mapped[int] = mapped_column(BigInteger)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     username: Mapped[str]
     address: Mapped[str | None]
     value: Mapped[float | None]
+
+    # Связи
+    admin_companies: Mapped[list["CompanyAdmin"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_updates=False,
+    )
+    orders: Mapped[list["Order"] | None] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class Order(Base):
     __tablename__ = "orders"
 
-    id: Mapped[UUID] = mapped_column(types.UUID, primary_key=True)
+    id: Mapped[UUID] = mapped_column(types.UUID, primary_key=True, default=uuid4)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"))
+    company_id: Mapped[UUID] = mapped_column(ForeignKey("companies.id"))
     status: Mapped[OrderStatus] = mapped_column(
         SQLAlchemyEnum(OrderStatus), default=OrderStatus.pending
     )
-    cost: Mapped[float] = mapped_column(default=0)
 
     # Связи
-    user_id: Mapped[UUID] = mapped_column(types.UUID, ForeignKey("users.id"))
-    merchant_id: Mapped[list[UUID]] = mapped_column(types.UUID, ForeignKey("orders.id"))
+    user: Mapped["User"] = relationship(back_populates="orders")
+    company: Mapped["Company"] = relationship(back_populates="orders")
+    items: Mapped[list["OrderItem"]] = relationship(
+        back_populates="order", cascade="all, delete-orphan"
+    )
 
 
 class OrderItem(Base):
     __tablename__ = "order_items"
 
-    id: Mapped[UUID] = mapped_column(types.UUID, primary_key=True)
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     order_id: Mapped[UUID] = mapped_column(ForeignKey("orders.id"))
-    base_merch_id: Mapped[UUID] = mapped_column(ForeignKey("base_merches.id"))
-    variant_id: Mapped[UUID | None] = mapped_column(ForeignKey("merch_variants.id"))
-
+    merch_id: Mapped[UUID] = mapped_column(ForeignKey("base_merches.id"))
     quantity: Mapped[int] = mapped_column(default=1)
-    price_per_item: Mapped[float]  # Фиксируем цену на момент заказа
-    total_price: Mapped[float]
+    price_at_order: Mapped[float]
 
     # Связи
     order: Mapped["Order"] = relationship(back_populates="items")
-    base_merch: Mapped["BaseMerch"] = relationship()
-    variant: Mapped["MerchVariant | None"] = relationship()
+    merch: Mapped["BaseMerch"] = relationship()
 
 
 class Company(Base):
     __tablename__ = "companies"
 
-    id: Mapped[UUID] = mapped_column(types.UUID, primary_key=True)
+    id: Mapped[UUID] = mapped_column(types.UUID, primary_key=True, default=uuid4)
     company: Mapped[str]
 
     # Связи
-    merch_variants: Mapped[list["BaseMerch"] | None] = relationship(
-        back_populates="merch", cascade="all, delete-orphan"
+    merch_items: Mapped[list["BaseMerch"] | None] = relationship(
+        back_populates="company", cascade="all, delete-orphan"
     )
+    administrators: Mapped[list["CompanyAdmin"]] = relationship(
+        back_populates="company",
+        cascade="all, delete-orphan",
+        passive_updates=False,
+    )
+    orders: Mapped[list["Order"]] = relationship(back_populates="company")
 
 
 class BaseMerch(Base):
     __tablename__ = "base_merches"
 
-    id: Mapped[UUID] = mapped_column(types.UUID, primary_key=True)
+    id: Mapped[UUID] = mapped_column(types.UUID, primary_key=True, default=uuid4)
+    company_id: Mapped[UUID] = mapped_column(ForeignKey("companies.id"))
     name: Mapped[str]
-    cost: Mapped[float]
-    is_available: Mapped[bool]
-    quantity: Mapped[int] = mapped_column(default=0)
-    currency_type: Mapped[CurrencyType] = mapped_column(
-        SQLAlchemyEnum(CurrencyType), default=CurrencyType.CNY
-    )
+    cost: Mapped[str]
 
     # Связи
-    variants: Mapped[list["MerchVariant"] | None] = relationship(
-        back_populates="base_merch", cascade="all, delete-orphan"
-    )
+    company: Mapped["Company"] = relationship(back_populates="merch_items")
     images: Mapped[list["MerchImage"]] = relationship(
         back_populates="mech", cascade="all, delete-orphan"
     )
@@ -110,7 +119,7 @@ class BaseMerch(Base):
 class MerchImage(Base):
     __tablename__ = "merch_images"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     merch_id: Mapped[int] = mapped_column(ForeignKey("base_merches.id"))
     url: Mapped[str] = mapped_column(String)
     is_primary: Mapped[bool] = mapped_column(default=False)
@@ -118,13 +127,3 @@ class MerchImage(Base):
 
     # Связи
     mech: Mapped["BaseMerch"] = relationship(back_populates="images")
-
-
-class MerchVariant(Base):
-    __tablename__ = "merch_variants"
-
-    id: Mapped[UUID] = mapped_column(types.UUID, primary_key=True)
-    is_available: Mapped[bool | None]
-    size: Mapped[str | None]
-    color: Mapped[str | None]
-    quantity: Mapped[int | None]
