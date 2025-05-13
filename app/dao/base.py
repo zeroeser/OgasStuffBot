@@ -1,9 +1,8 @@
 from typing import TypeVar, Generic, Type
 
-from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dao.database import Base
+from app.models.base import Base
 
 T = TypeVar("T", bound=Base)
 

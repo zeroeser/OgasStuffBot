@@ -1,1 +1,12 @@
-tests/
+/img
+/myenv
+.git
+.idea
+db_int.sql
+README.md
+dockerfile
+docker-compose.yml
+.env
+.env.example
+.gitignore
+

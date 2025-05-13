@@ -1,15 +1,13 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from app.config import settings
 
 
-def main_user_kb(user_id: int) -> InlineKeyboardMarkup:
+def main_user_kb(is_admin: bool) -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
 
     kb.add(InlineKeyboardButton(text="Заказы", callback_data="orders"))
 
-    # TODO надо заменить проверку на что-то нормальное
-    if str(user_id) in settings.ADMIN_IDS:
+    if is_admin:
         kb.add(InlineKeyboardButton(text="Админ-панель", callback_data="admin_panel"))
 
     kb.adjust(1)

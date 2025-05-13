@@ -1,8 +1,9 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message
 from aiogram.filters import Filter
-from app.config import settings
 from loguru import logger
+
+from app.core.config import settings
 
 router = Router()
 

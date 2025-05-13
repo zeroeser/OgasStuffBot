@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request
 from loguru import logger
 
 from app.bot.create_bot import dp, init_bot, bot, stop_bot
-from app.config import settings
+from app.core.config import settings
 
 
 async def start_polling():

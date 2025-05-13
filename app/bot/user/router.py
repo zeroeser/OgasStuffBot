@@ -14,5 +14,8 @@ async def smd_start(message: Message, state: FSMContext, is_admin: bool):
 
     user_data = message.from_user
     user_id = user_data.id
-
-    await message.answer("Привет админ" if is_admin else "Привет пользователь", reply_markup=main_user_kb(user_id))
+    text = "Привет админ" if is_admin else "Привет пользователь"
+    await message.answer(
+        text,
+        reply_markup=main_user_kb(is_admin),
+    )

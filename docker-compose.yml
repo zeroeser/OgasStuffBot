@@ -1,0 +1,27 @@
+version: '3.9'
+
+x-default-healthcheck-timings: &default-healthcheck-timings
+  interval: 3m
+  timeout: 3m
+  retries: 3
+  start_period: 30s
+
+services:
+
+  db:
+    image: postgres:17
+    container_name: ${OGAS_STUFF_DB_HOST}
+    environment:
+      POSTGRES_USER: ${OGAS_STUFF_DB_USER}
+      POSTGRES_PASSWORD: ${OGAS_STUFF_DB_PASSWORD}
+      POSTGRES_DB: ${OGAS_STUFF_DB_NAME}
+    volumes:
+      - ogas_stuff_db:/var/lib/postgresql/data
+    restart: unless-stopped
+    # temp
+    ports:
+      - "5432:5432"
+
+volumes:
+  ogas_stuff_db:
+    external: true

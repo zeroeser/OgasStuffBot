@@ -8,10 +8,14 @@ from aiogram.types import BotCommand, BotCommandScopeDefault
 from aiogram_dialog import setup_dialogs
 from loguru import logger
 
-from app.config import settings
+from app.core.config import settings
 from app.bot.admin.router import router as admin_router
 from app.bot.user.router import router as user_router
-from app.middlewares import AdminMiddleware, DatabaseMiddlewareWithCommit, DatabaseMiddlewareWithoutCommit
+from app.core.middlewares import (
+    AdminMiddleware,
+    DatabaseMiddlewareWithCommit,
+    DatabaseMiddlewareWithoutCommit,
+)
 
 bot = Bot(
     token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML)
@@ -42,8 +46,8 @@ async def init_bot():
     setup_dialogs(dp)
     await set_commands()
 
-    # dp.message.middleware(DatabaseMiddlewareWithoutCommit())
-    # dp.message.middleware(DatabaseMiddlewareWithCommit())
+    dp.message.middleware(DatabaseMiddlewareWithoutCommit())
+    dp.message.middleware(DatabaseMiddlewareWithCommit())
     dp.message.middleware(AdminMiddleware())
 
     dp.include_router(user_router)

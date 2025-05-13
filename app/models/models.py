@@ -1,26 +1,35 @@
+from uuid import UUID
+
 from sqlalchemy import String, ForeignKey, types, BigInteger
 from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from uuid import UUID
 
-from app.dao.database import Base
-from app.dao.enum_models import OrderStatus, CurrencyType
+from app.models.base import Base
+from .enum_models import OrderStatus, CurrencyType
 
 
 class CompanyAdmin(Base):
-    __tablename__ = 'companies_administrators'
+    __tablename__ = "companies_administrators"
 
     # Связи
-    user_id: Mapped[UUID] = mapped_column(types.UUID, ForeignKey("users.id"))
-    merchant_ids: Mapped[list[UUID]] = mapped_column(types.UUID, ForeignKey("companies.id"))
+    user_id: Mapped[UUID] = mapped_column(
+        types.UUID, ForeignKey("users.id"), primary_key=True
+    )
+    company_id: Mapped[UUID] = mapped_column(
+        types.UUID, ForeignKey("companies.id"), primary_key=True
+    )
+
+    # Relationships
+    user: Mapped["User"] = relationship(back_populates="admin_companies")
+    company: Mapped["Company"] = relationship(back_populates="administrators")
 
 
 class User(Base):
     __tablename__ = "users"
 
     id: Mapped[UUID] = mapped_column(types.UUID, primary_key=True)
-    user_id: Mapped[BigInteger]
+    tg_user_id: Mapped[int] = mapped_column(BigInteger)
     username: Mapped[str]
     address: Mapped[str | None]
     value: Mapped[float | None]
@@ -30,7 +39,9 @@ class Order(Base):
     __tablename__ = "orders"
 
     id: Mapped[UUID] = mapped_column(types.UUID, primary_key=True)
-    status: Mapped[OrderStatus] = mapped_column(SQLAlchemyEnum(OrderStatus), default=OrderStatus.pending)
+    status: Mapped[OrderStatus] = mapped_column(
+        SQLAlchemyEnum(OrderStatus), default=OrderStatus.pending
+    )
     cost: Mapped[float] = mapped_column(default=0)
 
     # Связи
@@ -76,15 +87,16 @@ class BaseMerch(Base):
     cost: Mapped[float]
     is_available: Mapped[bool]
     quantity: Mapped[int] = mapped_column(default=0)
-    currency_type: Mapped[CurrencyType] = mapped_column(SQLAlchemyEnum(CurrencyType), default=CurrencyType.CNY)
+    currency_type: Mapped[CurrencyType] = mapped_column(
+        SQLAlchemyEnum(CurrencyType), default=CurrencyType.CNY
+    )
 
     # Связи
     variants: Mapped[list["MerchVariant"] | None] = relationship(
         back_populates="base_merch", cascade="all, delete-orphan"
     )
     images: Mapped[list["MerchImage"]] = relationship(
-        back_populates="mech",
-        cascade="all, delete-orphan"
+        back_populates="mech", cascade="all, delete-orphan"
     )
 
     @hybrid_property
@@ -96,10 +108,10 @@ class BaseMerch(Base):
 
 
 class MerchImage(Base):
-    __tablename__ = 'product_images'
+    __tablename__ = "merch_images"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
+    merch_id: Mapped[int] = mapped_column(ForeignKey("base_merches.id"))
     url: Mapped[str] = mapped_column(String)
     is_primary: Mapped[bool] = mapped_column(default=False)
     position: Mapped[int]
@@ -116,6 +128,3 @@ class MerchVariant(Base):
     size: Mapped[str | None]
     color: Mapped[str | None]
     quantity: Mapped[int | None]
-
-
-
