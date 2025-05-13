@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "mica_bot"
+version = "0.1.0"
+description = ""
+authors = ["pascal"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+aiogram-dialog = "2.3.1"
+aiogram = "3.17.0"
+pydantic = {extras = ["dotenv"], version = "2.10.6"}
+pydantic-settings = {}
+loguru = "^0.7.3"
+executor = "^23.2"
+fastapi = "0.115.8"
+sqlalchemy = { version = "2.0.40", extras = ["asyncio"] }
+uvicorn = "^0.34.2"
+asyncpg = "0.30.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
