@@ -1,14 +1,17 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.utils.keyboard import ReplyKeyboardMarkup, KeyboardButton
 
 
-def main_user_kb(is_admin: bool) -> InlineKeyboardMarkup:
-    kb = InlineKeyboardBuilder()
-
-    kb.add(InlineKeyboardButton(text="Заказы", callback_data="orders"))
-
+def main_user_kb(is_admin: bool) -> ReplyKeyboardMarkup:
+    kb_list = [
+        [KeyboardButton(text="Регистрация"), KeyboardButton(text="Информация")],
+        [KeyboardButton(text="Заказы"), KeyboardButton(text="Корзина")],
+    ]
     if is_admin:
-        kb.add(InlineKeyboardButton(text="Админ-панель", callback_data="admin_panel"))
-
-    kb.adjust(1)
-    return kb.as_markup()
+        kb_list.append([KeyboardButton(text="⚙️ Админ панель")])
+    kb = ReplyKeyboardMarkup(
+        keyboard=kb_list,
+        resize_keyboard=True,
+        one_time_keyboard=True,
+        input_field_placeholder="Воспользуйтесь меню:",
+    )
+    return kb

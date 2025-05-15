@@ -21,8 +21,12 @@ class CompanyAdmin(Base):
     )
 
     # Relationships
-    user: Mapped["User"] = relationship(back_populates="admin_companies")
-    company: Mapped["Company"] = relationship(back_populates="administrators")
+    user: Mapped["User"] = relationship(
+        back_populates="admin_companies", lazy="selectin"
+    )
+    company: Mapped["Company"] = relationship(
+        back_populates="administrators", lazy="selectin"
+    )
 
 
 class User(Base):
@@ -80,18 +84,16 @@ class Company(Base):
     __tablename__ = "companies"
 
     id: Mapped[UUID] = mapped_column(types.UUID, primary_key=True, default=uuid4)
-    company: Mapped[str]
+    name: Mapped[str]
 
     # Связи
     merch_items: Mapped[list["BaseMerch"] | None] = relationship(
         back_populates="company", cascade="all, delete-orphan"
     )
     administrators: Mapped[list["CompanyAdmin"]] = relationship(
-        back_populates="company",
-        cascade="all, delete-orphan",
-        passive_updates=False,
+        back_populates="company", cascade="all, delete-orphan", lazy="selectin"
     )
-    orders: Mapped[list["Order"]] = relationship(back_populates="company")
+    orders: Mapped[list["Order"] | None] = relationship(back_populates="company")
 
 
 class BaseMerch(Base):

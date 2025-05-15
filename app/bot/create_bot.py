@@ -8,6 +8,7 @@ from aiogram.types import BotCommand, BotCommandScopeDefault
 from aiogram_dialog import setup_dialogs
 from loguru import logger
 
+from app.bot.admin.dialog import booking_dialog
 from app.core.config import settings
 from app.bot.admin.router import router as admin_router
 from app.bot.user.router import router as user_router
@@ -53,6 +54,8 @@ async def init_bot():
 
     dp.include_router(user_router)
     dp.include_router(admin_router)
+
+    dp.include_router(booking_dialog)
 
     for admin_id in settings.ADMIN_IDS:
         try:
